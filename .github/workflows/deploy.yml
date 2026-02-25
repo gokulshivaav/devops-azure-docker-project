@@ -13,24 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy files to VM
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: 20.101.123.118
-          username: azureuser
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "app/*"
-          target: "/home/azureuser/app"
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 20.101.123.118 >> ~/.ssh/known_hosts
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: 20.101.123.118
-          username: azureuser
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/azureuser/app
-            sudo docker stop devops-container || true
-            sudo docker rm devops-container || true
+      - name: Deploy to VM
+        run: |
+          ssh -o StrictHostKeyChecking=no azureuser@20.101.123.118 << 'EOF'
+            cd ~/devops-azure-docker-project
+            git pull origin main
+            cd app
+            sudo docker rm -f devops-container || true
             sudo docker build -t devops-app .
-            sudo docker run -d -p 80:80 --name devops-container devops-app
+            sudo docker run -d -p 80:80 --name devops-container --restart always devops-app
+          EOF
