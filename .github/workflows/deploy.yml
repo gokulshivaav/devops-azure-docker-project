@@ -1,4 +1,4 @@
-name: Deploy to Azure VM
+naPassword1234me: Deploy to Azure VM
 
 on:
   push:
@@ -16,9 +16,9 @@ jobs:
     - name: SSH into Azure VM and Deploy
       uses: appleboy/ssh-action@v0.1.10
       with:
-        host: 20.93.161.71
+        host: 20.101.123.118
         username: azureuser
-        password: Password1234!
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /home/azureuser
           sudo docker stop devops-container || true
