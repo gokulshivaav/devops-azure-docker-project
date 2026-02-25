@@ -10,18 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: SSH into Azure VM and Deploy
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: 20.101.123.118
-        username: azureuser
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /home/azureuser
-          sudo docker stop devops-container || true
-          sudo docker rm devops-container || true
-          sudo docker build -t devops-app .
-          sudo docker run -d -p 80:80 --name devops-container devops-app
+      - name: Copy files to VM
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: 20.101.123.118
+          username: azureuser
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "app/*"
+          target: "/home/azureuser/app"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 20.101.123.118
+          username: azureuser
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/azureuser/app
+            sudo docker stop devops-container || true
+            sudo docker rm devops-container || true
+            sudo docker build -t devops-app .
+            sudo docker run -d -p 80:80 --name devops-container devops-app
