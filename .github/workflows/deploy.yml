@@ -1,4 +1,4 @@
-naPassword1234me: Deploy to Azure VM
+name: Deploy to Azure VM
 
 on:
   push:
