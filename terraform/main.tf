@@ -3,6 +3,10 @@ provider "azurerm" {
   skip_provider_registration = true
 }
 
+variable "ssh_public_key" {
+  type = string
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "devops-rg"
   location = "West Europe"
@@ -70,40 +74,3 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-}
-
-resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "devops-vm"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  size                = "Standard_D2s_v3"
-  admin_username      = "azureuser"
-
-   disable_password_authentication = true
-
-  admin_ssh_key {
-  username   = "azureuser"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
-
-  network_interface_ids = [
-   azurerm_network_interface.nic.id,
-   ]
-
-
-  os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-}
-resource "azurerm_network_interface_security_group_association" "nsg_assoc" {
-  network_interface_id      = azurerm_network_interface.nic.id
-  network_security_group_id = azurerm_network_security_group.nsg.id
-}
