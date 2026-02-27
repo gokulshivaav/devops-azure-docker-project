@@ -1,6 +1,6 @@
 ---
 - name: Install and Configure Docker
-  hosts: azure
+  hosts: all
   become: yes
 
   tasks:
@@ -17,8 +17,9 @@
       service:
         name: docker
         state: started
-
-    - name: Enable Docker on boot
-      service:
-        name: docker
         enabled: yes
+
+    - name: Run a sample container
+      shell: "docker run -d -p 80:80 --name my-app nginx"
+      args:
+        creates: /var/lib/docker/containers # Simple check to prevent duplicate runs
