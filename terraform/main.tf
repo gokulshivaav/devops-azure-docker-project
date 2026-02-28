@@ -2,7 +2,6 @@ provider "azurerm" {
   features {}
 
   resource_provider_registrations = ["Microsoft.Network"]
- }
 }
 
 # Resource Group
