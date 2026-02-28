@@ -1,13 +1,16 @@
 provider "azurerm" {
   features {}
-  skip_provider_registration = true
-}
 
+  # v5 replacement for skip_provider_registration
+  resource_provider_registrations = {
+    "Microsoft.Network" = "skip"
+  }
+}
 
 # Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = "devops-rg"
-  location = "northeurope"  # Ireland region
+  location = "northeurope"
 }
 
 # Virtual Network
@@ -32,21 +35,6 @@ resource "azurerm_public_ip" "publicip" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
-  sku                 = "Standard"
-}
-
-# Network Interface
-resource "azurerm_network_interface" "nic" {
-  name                = "devops-nic"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.publicip.id
-  }
 }
 
 # Network Security Group
@@ -80,9 +68,20 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
-# Associate NSG to NIC
-resource "azurerm_network_security_group_association" "nsg_assoc" {
-  network_interface_id      = azurerm_network_interface.nic.id
+# Network Interface with NSG assigned
+resource "azurerm_network_interface" "nic" {
+  name                = "devops-nic"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.publicip.id
+  }
+
+  # Assign NSG here directly
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
