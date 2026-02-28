@@ -3,15 +3,14 @@ provider "azurerm" {
   skip_provider_registration = true
 }
 
-variable "ssh_public_key" {
-  type = string
-}
 
+# Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = "devops-rg"
-  location = "West Europe"
+  location = "northeurope"  # Ireland region
 }
 
+# Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = "devops-vnet"
   address_space       = ["10.0.0.0/16"]
@@ -19,6 +18,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+# Subnet
 resource "azurerm_subnet" "subnet" {
   name                 = "devops-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -26,13 +26,16 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
+# Public IP
 resource "azurerm_public_ip" "publicip" {
   name                = "devops-publicip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
+# Network Interface
 resource "azurerm_network_interface" "nic" {
   name                = "devops-nic"
   location            = azurerm_resource_group.rg.location
@@ -46,6 +49,7 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
+# Network Security Group
 resource "azurerm_network_security_group" "nsg" {
   name                = "devops-nsg"
   location            = azurerm_resource_group.rg.location
@@ -74,3 +78,45 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+}
+
+# Associate NSG to NIC
+resource "azurerm_network_security_group_association" "nsg_assoc" {
+  network_interface_id      = azurerm_network_interface.nic.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+# Linux VM
+resource "azurerm_linux_virtual_machine" "vm" {
+  name                = "devops-vm"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  size                = "Standard_B1s"
+  admin_username      = "azureuser"
+  network_interface_ids = [
+    azurerm_network_interface.nic.id,
+  ]
+
+  admin_ssh_key {
+    username   = "azureuser"
+    public_key = var.ssh_public_key
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "20_04-lts"
+    version   = "latest"
+  }
+}
+
+# Output Public IP
+output "vm_public_ip" {
+  description = "Public IP of the VM"
+  value       = azurerm_public_ip.publicip.ip_address
+}

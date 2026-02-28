@@ -8,18 +8,28 @@
       apt:
         update_cache: yes
 
-    - name: Install Docker
+    - name: Install required dependencies
       apt:
-        name: docker.io
+        name:
+          - docker.io
+          - python3-pip
         state: present
 
-    - name: Start Docker service
+    - name: Install Docker Python module
+      pip:
+        name: docker
+
+    - name: Start and enable Docker service
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Run a sample container
-      shell: "docker run -d -p 80:80 --name my-app nginx"
-      args:
-        creates: /var/lib/docker/containers # Simple check to prevent duplicate runs
+    - name: Run nginx container
+      community.docker.docker_container:
+        name: my-app
+        image: nginx
+        state: started
+        restart_policy: always
+        published_ports:
+          - "80:80"
