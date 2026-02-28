@@ -1,10 +1,8 @@
 provider "azurerm" {
   features {}
 
-  # v5 replacement for skip_provider_registration
-  resource_provider_registrations = {
-    "Microsoft.Network" = "skip"
-  }
+  resource_provider_registrations = ["Microsoft.Network"]
+}
 }
 
 # Resource Group
