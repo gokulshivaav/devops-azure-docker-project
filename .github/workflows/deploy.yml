@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     env:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -22,18 +23,39 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - name: Terraform Init and Apply
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init -upgrade
+
+      - name: Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+
+      - name: Terraform Apply
         working-directory: ./terraform
         run: |
-          terraform init
           terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
           echo "VM_IP=$(terraform output -raw vm_public_ip)" >> $GITHUB_ENV
 
-      - name: Setup SSH Key for Ansible
+      - name: Wait for SSH to become available
+        run: |
+          for i in {1..20}; do
+            nc -zv ${{ env.VM_IP }} 22 && break
+            echo "Waiting for SSH..."
+            sleep 10
+          done
+
+      - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+      - name: Install Ansible and Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y ansible python3-pip
+          ansible-galaxy collection install -r ansible/requirements.yml
 
       - name: Run Ansible Playbook
         working-directory: ./ansible
