@@ -24,6 +24,11 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
+resource "azurerm_subnet_network_security_group_association" "subnet_nsg" {
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
 # Public IP
 resource "azurerm_public_ip" "publicip" {
   name                = "devops-publicip"
@@ -63,7 +68,6 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
-# Network Interface with NSG assigned
 resource "azurerm_network_interface" "nic" {
   name                = "devops-nic"
   location            = azurerm_resource_group.rg.location
@@ -75,11 +79,7 @@ resource "azurerm_network_interface" "nic" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.publicip.id
   }
-
-  # Assign NSG here directly
-  network_security_group_id = azurerm_network_security_group.nsg.id
 }
-
 # Linux VM
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = "devops-vm"
