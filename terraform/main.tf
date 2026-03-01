@@ -8,6 +8,11 @@ terraform {
   required_version = ">= 1.3.0"
 }
 
+variable "ssh_public_key" {
+  description = "SSH public key used for VM creation"
+  type        = string
+}
+
 provider "azurerm" {
   features {}
 }
