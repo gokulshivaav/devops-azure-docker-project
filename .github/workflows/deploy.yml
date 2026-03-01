@@ -1,13 +1,13 @@
-name: Azure Infrastructure and Docker Deploy
 name: Configure VM with Ansible
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  configure:
+  terraform:
     runs-on: ubuntu-latest
 
     env:
