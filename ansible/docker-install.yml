@@ -1,38 +1,18 @@
----
-- name: Install and Configure Docker
-  hosts: all
-  become: yes
+    - name: Pull latest calculator image
+      community.docker.docker_image:
+        name: gokulshivaav/calculator-app
+        tag: latest
+        source: pull
 
-  # Define SSH connection parameters, including necessary algorithms
-  vars:
-    ansible_ssh_common_args: "-o HostKeyAlgorithms=rsa-sha2-512,rsa-sha2-256,ecdsa-sha2-nistp256,ssh-ed25519 -o StrictHostKeyChecking=no"
-
-  tasks:
-    - name: Update apt packages
-      apt:
-        update_cache: yes
-
-    - name: Install required dependencies
-      apt:
-        name:
-          - docker.io
-          - python3-pip
-        state: present
-
-    - name: Install Docker Python module
-      pip:
-        name: docker
-
-    - name: Start and enable Docker service
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Run nginx container
+    - name: Remove old container if exists
       community.docker.docker_container:
-        name: my-app
-        image: nginx
+        name: calculator
+        state: absent
+
+    - name: Run calculator container
+      community.docker.docker_container:
+        name: calculator
+        image: gokulshivaav/calculator-app:latest
         state: started
         restart_policy: always
         published_ports:
