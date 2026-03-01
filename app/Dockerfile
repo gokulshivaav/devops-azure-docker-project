@@ -1,11 +1,12 @@
-FROM python:3.9-slim
+# Dockerfile
+FROM python:3.9
 
 WORKDIR /app
 
-COPY app.py .
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-RUN pip install flask
-
-EXPOSE 80
+# Copy the entire application including templates
+COPY . .
 
 CMD ["python", "app.py"]
