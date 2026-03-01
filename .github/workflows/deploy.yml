@@ -26,7 +26,7 @@ jobs:
         run: |
           docker push gokulshivaav/calculator-app:${{ github.sha }}
           docker tag gokulshivaav/calculator-app:${{ github.sha }} gokulshivaav/calculator-app:latest
-          docker push gokulshivaav/calculator-app:lates
+          docker push gokulshivaav/calculator-app:latest
 
       - name: Set VM IP as Environment Variable
         run: echo "VM_IP=23.100.0.81" >> $GITHUB_ENV
