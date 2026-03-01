@@ -1,3 +1,33 @@
+---
+- name: Install and Configure Docker
+  hosts: all
+  become: yes
+
+  tasks:
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install required dependencies
+      apt:
+        name:
+          - docker.io
+          - python3-pip
+        state: present
+
+    - name: Install Docker Python module
+      pip:
+        name: docker
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # 🔥 YOUR DEPLOYMENT TASKS MUST BE UNDER tasks:
+
     - name: Pull latest calculator image
       community.docker.docker_image:
         name: gokulshivaav/calculator-app
