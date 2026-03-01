@@ -14,6 +14,11 @@ provider "azurerm" {
 
 
 # Resource Group
+provider "github" {
+  token = var.github_token
+  owner = "gokulshivaav"
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "devops-rg"
   location = "westeurope"
@@ -128,4 +133,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
 output "vm_public_ip" {
   description = "Public IP of the VM"
   value       = azurerm_public_ip.publicip.ip_address
+}
+
+resource "github_actions_secret" "vm_ip_secret" {
+  repository      = var.github_repository
+  secret_name     = "VM_IP"
+  plaintext_value = azurerm_public_ip.publicip.ip_address
 }

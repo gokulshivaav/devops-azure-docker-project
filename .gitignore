@@ -1,3 +1,5 @@
+*_key
+*_key.pub
 .terraform/
 *.tfstate
 *.tfstate.backup
