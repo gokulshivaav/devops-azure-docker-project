@@ -1,11 +1,13 @@
 name: Azure Infrastructure and Docker Deploy
+name: Configure VM with Ansible
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  configure:
     runs-on: ubuntu-latest
 
     env:
@@ -46,6 +48,13 @@ jobs:
           done
 
       - name: Setup SSH Key
+      VM_IP: ${{ secrets.VM_IP }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup SSH Private Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
@@ -56,6 +65,22 @@ jobs:
           sudo apt update
           sudo apt install -y ansible python3-pip
           ansible-galaxy collection install -r ansible/requirements.yml
+      - name: Add VM to Known Hosts
+        run: |
+          ssh-keyscan -H ${{ env.VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: Wait for SSH
+        run: |
+          for i in {1..20}; do
+            nc -zv ${{ env.VM_IP }} 22 && break
+            echo "Waiting for SSH..."
+            sleep 10
+          done
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
 
       - name: Run Ansible Playbook
         working-directory: ./ansible
@@ -64,3 +89,5 @@ jobs:
           --user azureuser \
           --private-key ~/.ssh/id_rsa \
           --ssh-common-args='-o StrictHostKeyChecking=no'
+            --user gokulshivaav \
+            --private-key ~/.ssh/id_rsa
