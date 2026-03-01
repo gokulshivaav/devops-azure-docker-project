@@ -9,7 +9,7 @@ def calculator():
         try:
             num1 = float(request.form["num1"])
             num2 = float(request.form["num2"])
-            operation = request.form["operation"]
+            operation = request.form["operations"]
 
             if operation == "add":
                 result = num1 + num2
@@ -28,4 +28,4 @@ def calculator():
     return render_template("index.html", result=result)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=80)
